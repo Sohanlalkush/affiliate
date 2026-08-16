@@ -17,20 +17,27 @@ POST /availability   (also POST /)
 Partner resolution, in order of preference (`PREFERRED_PARTNER`):
 
 1. **Netmeds** — search `q=<term>`, take the first result where
-   `sellable === true` **and** the name actually matches the term, return
-   `https://www.netmeds.com/product/{slug}`. The name check is required:
-   Netmeds answers a no-results query with a random 12-item fallback list
-   (all sellable), so "first sellable" alone would send visitors to shampoo.
+   `sellable === true` **and** the name actually matches the term, then
+   convert `https://www.netmeds.com/product/{slug}` through the Ekaro
+   converter. The name check is required: Netmeds answers a no-results query
+   with a random 12-item fallback list (all sellable), so "first sellable"
+   alone would send visitors to shampoo.
 2. **Truemeds** — search suggestions, filter to products where
    `available === true` whose `skuName` matches the term (substitutes are
    a different medicine and are filtered out), pick the one with the LOWEST
    `sellingPrice`, build `https://www.truemeds.in/{productUrlSuffix}`, then
    convert it through the Ekaro converter (`convert_only`) into the affiliate
    shortlink.
+
+**Both partners return Ekaro shortlinks** (`bitli.in/...`) — every hand-off
+earns through the same EarnKaro account. Without `EARNKARO_API_TOKEN` both
+partner paths are disabled and only the Amazon backup remains.
 3. **Amazon backup** — `https://www.amazon.in/s?k=<term>&tag=pharmalite-21`.
    Used when both partners fail, any call errors/times out, the Ekaro token
    is missing, or the overall 14.5 s deadline is hit — so the browser always
-   gets a URL.
+   gets a URL. The tag on the Amazon link is the direct Amazon Associates
+   affiliate tag; the backup is a search page, so it is not run through
+   Ekaro.
 
 The search term is `name`, falling back to the deslugified `slug`, then
 `composition`. Only `slug` is guaranteed by the caller; the API works with it

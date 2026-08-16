@@ -109,6 +109,7 @@ function netmedsMatches(itemName, term) {
 }
 
 async function findNetmeds(term) {
+  if (!EKARO_TOKEN) return null;
   const url = `${NETMEDS_API}?q=${encodeURIComponent(term)}`;
   const r = await fetchJson(url, { headers: { accept: "application/json" } }, NETMEDS_TIMEOUT_MS);
   if (!r.ok || !r.json || !Array.isArray(r.json.items)) return null;
@@ -116,7 +117,11 @@ async function findNetmeds(term) {
     (it) => it && it.slug && it.sellable === true && netmedsMatches(it.name, term),
   );
   if (!hit) return null;
-  return { url: `https://www.netmeds.com/product/${hit.slug}`, partner: "netmeds" };
+  /* Same rule as Truemeds: the visitor's final URL is always an Ekaro
+     shortlink, so both partners earn through the same account. */
+  const converted = await convertEkaro(`https://www.netmeds.com/product/${hit.slug}`);
+  if (!converted) return null;
+  return { url: converted, partner: "netmeds" };
 }
 
 /**
