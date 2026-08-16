@@ -1,0 +1,15 @@
+{
+  "name": "pharmalite-affiliate",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Availability + affiliate-link API for Pharmalite /druglist/go (Netmeds, Truemeds+Ekaro, Amazon backup). Zero dependencies.",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
