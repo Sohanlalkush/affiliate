@@ -29,6 +29,21 @@ const ALLOWED_ORIGINS = (env.ALLOWED_ORIGIN || "https://pharmalite.in,http://loc
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+/* Any *.pharmalite.in subdomain (beta, staging, www, ...) is allowed even
+   though it is not listed in ALLOWED_ORIGINS. */
+const SUBDOMAIN_SUFFIX = ".pharmalite.in";
+
+function isAllowedOrigin(origin) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  let host;
+  try {
+    host = new URL(origin).hostname;
+  } catch {
+    return false;
+  }
+  return host.endsWith(SUBDOMAIN_SUFFIX);
+}
 const EKARO_TOKEN = env.EARNKARO_API_TOKEN || "";
 const AMAZON_TAG = env.AMAZON_TAG || "pharmalite-21";
 /* `netmeds` / `truemeds` pins a partner; `first` prefers Netmeds when both
@@ -303,7 +318,7 @@ async function handleAvailability(req, res, origin) {
 
 const server = http.createServer(async (req, res) => {
   const origin = req.headers.origin;
-  const allowed = origin ? ALLOWED_ORIGINS.includes(origin) : false;
+  const allowed = isAllowedOrigin(origin);
   const requestedUrl = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
   const route = requestedUrl.pathname;
 
@@ -327,7 +342,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`[${new Date().toISOString()}] affiliate availability API on http://localhost:${PORT}`);
-  console.log(`  allowed origins: ${ALLOWED_ORIGINS.join(", ")}`);
+  console.log(`  allowed origins: ${ALLOWED_ORIGINS.join(", ")} (plus any *.pharmalite.in subdomain)`);
   console.log(`  ekaro token: ${EKARO_TOKEN ? "configured" : "NOT configured (Truemeds disabled -> Amazon backup)"}`);
   console.log(`  budget: netmeds ${NETMEDS_TIMEOUT_MS}ms | truemeds ${TRUEMEDS_TIMEOUT_MS}ms + ekaro ${EKARO_TIMEOUT_MS}ms | hard cap ${TOTAL_TIMEOUT_MS}ms`);
 });
